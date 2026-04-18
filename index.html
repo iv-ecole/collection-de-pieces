@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>🪙 Collection</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<style>
+body {
+  background: #0a0a0a;
+  color: #eaeaea;
+  font-family: system-ui;
+  margin: 0;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+  font-weight: 300;
+  letter-spacing: 2px;
+}
+
+.container {
+  max-width: 900px;
+  margin: auto;
+}
+
+input, select {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  background: #111;
+  border: 1px solid #222;
+  color: white;
+  border-radius: 8px;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: #00ff9c;
+  border: none;
+  color: black;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.card {
+  background: #111;
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid #222;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>🪙 Collection</h1>
+
+<form id="form">
+
+<input placeholder="Numéro" id="numero">
+<input placeholder="Nom" id="nom">
+
+<select id="qualite">
+  <option>Courante</option>
+  <option>BU</option>
+  <option>BE</option>
+</select>
+
+<input placeholder="Année" id="annee">
+
+<select id="metal_type">
+  <option>Or</option>
+  <option>Argent</option>
+  <option>Cuivre</option>
+  <option>Nickel</option>
+  <option>Autre</option>
+</select>
+
+<input placeholder="Pureté (‰)" id="metal_purete">
+<input placeholder="Poids (g)" id="poids">
+<input placeholder="Diamètre (mm)" id="diametre">
+<input placeholder="Tirage" id="tirage">
+
+<input placeholder="Valeur faciale (€)" id="valeur_faciale">
+<input placeholder="Prix d'achat (€)" id="prix_achat">
+
+<select id="etat">
+  <option>Neuf</option>
+  <option>Occasion</option>
+</select>
+
+<input placeholder="Quantité" id="quantite">
+
+<select id="facture">
+  <option value="true">Facture Oui</option>
+  <option value="false">Facture Non</option>
+</select>
+
+<input type="date" id="date_achat">
+<input placeholder="Lieu d'achat" id="lieu_achat">
+
+<button>Ajouter</button>
+
+</form>
+
+<input id="search" placeholder="🔍 Rechercher">
+
+<div id="liste"></div>
+
+</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://spollmzcbfatshuzuvfl.supabase.co",
+  "TON_ANON_KEY_ICI"
+);
+
+let globalData = [];
+
+async function charger() {
+  const { data } = await supabaseClient.from("pieces").select("*");
+  globalData = data;
+  afficher(data);
+}
+
+function afficher(data) {
+  const div = document.getElementById("liste");
+  div.innerHTML = "";
+
+  data.forEach(p => {
+    const el = document.createElement("div");
+    el.className = "card";
+
+    el.innerHTML = `
+      <b>#${p.numero}</b> - ${p.nom}<br>
+      ${p.annee} • ${p.qualite}<br>
+      ${p.metal_type} ${p.metal_purete}‰<br>
+      ${p.poids}g • ${p.diametre}mm • tirage ${p.tirage}<br>
+      Faciale: ${p.valeur_faciale}€ | Achat: ${p.prix_achat}€<br>
+      ${p.etat} • x${p.quantite}<br>
+      Facture: ${p.facture ? "Oui" : "Non"}<br>
+      ${p.date_achat} • ${p.lieu_achat}
+    `;
+
+    div.appendChild(el);
+  });
+}
+
+document.getElementById("form").addEventListener("submit", async e => {
+  e.preventDefault();
+
+  await supabaseClient.from("pieces").insert([{
+    numero: numero.value,
+    nom: nom.value,
+    qualite: qualite.value,
+    annee: parseInt(annee.value),
+    metal_type: metal_type.value,
+    metal_purete: parseInt(metal_purete.value),
+    poids: parseFloat(poids.value),
+    diametre: parseFloat(diametre.value),
+    tirage: parseInt(tirage.value),
+    valeur_faciale: parseFloat(valeur_faciale.value),
+    prix_achat: parseFloat(prix_achat.value),
+    etat: etat.value,
+    quantite: parseInt(quantite.value),
+    facture: facture.value === "true",
+    date_achat: date_achat.value,
+    lieu_achat: lieu_achat.value
+  }]);
+
+  e.target.reset();
+  charger();
+});
+
+document.getElementById("search").addEventListener("input", function() {
+  const val = this.value.toLowerCase();
+
+  const filtered = globalData.filter(p =>
+    (p.nom || "").toLowerCase().includes(val) ||
+    (p.numero || "").toString().includes(val)
+  );
+
+  afficher(filtered);
+});
+
+charger();
+</script>
+
+</body>
+</html>
